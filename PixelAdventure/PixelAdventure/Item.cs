@@ -12,22 +12,22 @@ namespace PixelAdventure
     class ItemTable
     {
         public static Item[] MyTable = new Item[] {
-            new Item(0, "Wooden Sword", StackType.NotStackable, new TypeProps[] { new TypeProps(ItemType.Weapon, new string[] { "MinAtk=1", "MaxAtk=3", "AtkSpd=5" }) }),
-            new Item(1, "Leather Armor", StackType.NotStackable, new TypeProps[] { new TypeProps(ItemType.Armor, new string[] { "Def=3", "Spd=1" }) }),
-            new Item(2, "Iron Axe", StackType.NotStackable, new TypeProps[] { new TypeProps(ItemType.Weapon, new string[] { "MinAtk=6", "MaxAtk=15", "AtkSpd=2"}), new TypeProps(ItemType.Tool, new string[] { "Use=Tree" }) }),
-            new Item(3, "Feather", StackType.Stackable, null),
-            new Item(4, "Apple", StackType.Stackable, new TypeProps[] { new TypeProps (ItemType.Food, new string[] { "Restore=3" }) }),
-            new Item(5, "Leather", StackType.Stackable, null),
-            new Item(6, "Snakeskin", StackType.Stackable, null),
-            new Item(7, "Meat", StackType.Stackable, new TypeProps[] { new TypeProps (ItemType.Food, new string[] { "Restore=5" }) }),
-            new Item(8, "Key", StackType.Stackable, null),
-            new Item(9, "Short Sword", StackType.NotStackable, new TypeProps[] { new TypeProps(ItemType.Weapon, new string[] { "MinAtk=9", "MaxAtk=11", "AtkSpd=4" }) }),
-            new Item(10, "Glass Bottle", StackType.Stackable, null),
-            new Item(11, "Gold Coin", StackType.Stackable, null),
-            new Item(12, "Silver Coin", StackType.Stackable, null),
-            new Item(13, "Copper Coin", StackType.Stackable, null),
-            new Item(14, "Wooden Dagger", StackType.NotStackable, new TypeProps[] { new TypeProps(ItemType.Weapon, new string[] { "MinAtk=1", "MaxAtk=1", "AtkSpd=8" }) }),
-            new Item(15, "Iron Dagger", StackType.NotStackable, new TypeProps[] { new TypeProps(ItemType.Weapon, new string[] { "MinAtk=6", "MaxAtk=8", "AtkSpd=8" }), new TypeProps(ItemType.Tool, new string[] { "Use=Leather;Snakeskin" }) })
+            new Item(0, "Wooden Sword", StackType.NotStackable, new TypeProps[] { new TypeProps(ItemType.Weapon, new string[] { "MinAtk=1", "MaxAtk=3", "AtkSpd=5" }) }, new int[] { 0, 0, 5 }),
+            new Item(1, "Leather Armor", StackType.NotStackable, new TypeProps[] { new TypeProps(ItemType.Armor, new string[] { "Def=3", "Spd=1" }) }, new int[] { 0, 3, 0 }),
+            new Item(2, "Iron Axe", StackType.NotStackable, new TypeProps[] { new TypeProps(ItemType.Weapon, new string[] { "MinAtk=6", "MaxAtk=15", "AtkSpd=2"}), new TypeProps(ItemType.Tool, new string[] { "Use=Tree" }) }, new int[] { 0, 5, 0 }),
+            new Item(3, "Feather", StackType.Stackable, null, new int[] { 0, 0, 1 }),
+            new Item(4, "Apple", StackType.Stackable, new TypeProps[] { new TypeProps (ItemType.Food, new string[] { "Restore=3" }) }, new int[] { 0, 0, 3 }),
+            new Item(5, "Leather", StackType.Stackable, null, new int[] { 0, 0, 10 }),
+            new Item(6, "Snakeskin", StackType.Stackable, null, new int[] { 0, 0, 6 }),
+            new Item(7, "Meat", StackType.Stackable, new TypeProps[] { new TypeProps (ItemType.Food, new string[] { "Restore=5" }) }, new int[] { 0, 0, 6 }),
+            new Item(8, "Key", StackType.Stackable, null, new int[] { 0, 1, 0 }),
+            new Item(9, "Short Sword", StackType.NotStackable, new TypeProps[] { new TypeProps(ItemType.Weapon, new string[] { "MinAtk=9", "MaxAtk=11", "AtkSpd=4" }) }, new int[] { 0, 3, 0 }),
+            new Item(10, "Glass Bottle", StackType.Stackable, null, new int[] { 0, 0, 3 }),
+            new Item(11, "Gold Coin", StackType.Stackable, null, new int[] { 1, 0, 0 }),
+            new Item(12, "Silver Coin", StackType.Stackable, null, new int[] { 0, 1, 0 }),
+            new Item(13, "Copper Coin", StackType.Stackable, null, new int[] { 0, 0, 1 } ),
+            new Item(14, "Wooden Dagger", StackType.NotStackable, new TypeProps[] { new TypeProps(ItemType.Weapon, new string[] { "MinAtk=1", "MaxAtk=1", "AtkSpd=8" }) }, new int[] { 0, 0, 3 }),
+            new Item(15, "Iron Dagger", StackType.NotStackable, new TypeProps[] { new TypeProps(ItemType.Weapon, new string[] { "MinAtk=6", "MaxAtk=8", "AtkSpd=8" }), new TypeProps(ItemType.Tool, new string[] { "Use=Leather;Snakeskin" }) }, new int[] { 0, 2, 5 })
         };
     }
 
@@ -50,14 +50,16 @@ namespace PixelAdventure
         public StackType IsStackable;
         public TypeProps[] Types;
         //public int Amount;
+        public int[] Worth;
 
-        public Item(int ID, string Name, StackType IsStackable, TypeProps[] Types) //Defines an item info object
+        public Item(int ID, string Name, StackType IsStackable, TypeProps[] Types, int[] Worth) //Defines an item info object
         {
             this.ID = ID;
             this.Name = Name;
             this.IsStackable = IsStackable;
             this.Types = Types;
             //this.Amount = Amount;
+            this.Worth = Worth;
         }
 
         public override string ToString()
@@ -73,6 +75,7 @@ namespace PixelAdventure
         public StackType IsStackable;
         public TypeProps[] Types;
         public int Amount;
+        public int[] Worth;
 
         public MyItem(int ID, int Amount) //Defines an item to be used in the game
         {
@@ -81,11 +84,12 @@ namespace PixelAdventure
             this.IsStackable = ItemTable.MyTable[ID].IsStackable;
             this.Types = ItemTable.MyTable[ID].Types;
             this.Amount = Amount;
+            this.Worth = ItemTable.MyTable[ID].Worth;
         }
 
         public Item ConvertToItem()
         {
-            return new Item(ID, Name, IsStackable, Types);
+            return new Item(ID, Name, IsStackable, Types, Worth);
         }
     }
 
@@ -94,6 +98,7 @@ namespace PixelAdventure
         public int ID;
         public string Name;
         public TypeProps[] Types;
+        public int[] Worth;
         public int MinAtk;
         public int MaxAtk;
         public int AtkSpd;
@@ -114,6 +119,7 @@ namespace PixelAdventure
             this.ID = ID;
             this.Name = ItemTable.MyTable[ID].Name;
             this.Types = ItemTable.MyTable[ID].Types;
+            this.Worth = ItemTable.MyTable[ID].Worth;
 
             for (PropCount = 0; PropCount < ItemTable.MyTable[ID].Types.Length; PropCount++)
                 if (ItemTable.MyTable[ID].Types[PropCount].Type == ItemType.Weapon)
@@ -144,6 +150,7 @@ namespace PixelAdventure
         public int ID;
         public string Name;
         public TypeProps[] Types;
+        public int[] Worth;
         public int Def;
         public int Spd;
 
@@ -162,6 +169,7 @@ namespace PixelAdventure
             this.ID = ID;
             this.Name = ItemTable.MyTable[ID].Name;
             this.Types = ItemTable.MyTable[ID].Types;
+            this.Worth = ItemTable.MyTable[ID].Worth;
 
             for (PropCount = 0; PropCount < ItemTable.MyTable[ID].Types.Length; PropCount++)
                 if (ItemTable.MyTable[ID].Types[PropCount].Type == ItemType.Armor)
@@ -187,6 +195,7 @@ namespace PixelAdventure
         public int ID;
         public string Name;
         public TypeProps[] Types;
+        public int[] Worth;
         public ToolUse MyUse;
 
         public Tool(int ID)
@@ -196,6 +205,7 @@ namespace PixelAdventure
             this.ID = ID;
             this.Name = ItemTable.MyTable[ID].Name;
             this.Types = ItemTable.MyTable[ID].Types;
+            this.Worth = ItemTable.MyTable[ID].Worth;
 
             for (PropCount = 0; PropCount < ItemTable.MyTable[ID].Types.Length; PropCount++)
                 if (ItemTable.MyTable[ID].Types[PropCount].Type == ItemType.Armor)

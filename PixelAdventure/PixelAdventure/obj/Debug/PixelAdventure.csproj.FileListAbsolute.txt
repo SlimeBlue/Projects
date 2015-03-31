@@ -4,5 +4,3 @@ C:\Users\Noy\documents\visual studio 2013\Projects\PixelAdventure\PixelAdventure
 C:\Users\Noy\documents\visual studio 2013\Projects\PixelAdventure\PixelAdventure\bin\Debug\PixelAdventure.pdb
 C:\Users\Noy\documents\visual studio 2013\Projects\PixelAdventure\PixelAdventure\obj\Debug\PixelAdventure.exe
 C:\Users\Noy\documents\visual studio 2013\Projects\PixelAdventure\PixelAdventure\obj\Debug\PixelAdventure.pdb
-C:\Users\Noy\Documents\Visual Studio 2013\Projects\PixelAdventure\PixelAdventure\bin\Debug\PixelAdventure.exe.CodeAnalysisLog.xml
-C:\Users\Noy\Documents\Visual Studio 2013\Projects\PixelAdventure\PixelAdventure\bin\Debug\PixelAdventure.exe.lastcodeanalysissucceeded

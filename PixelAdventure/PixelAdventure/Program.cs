@@ -4,18 +4,58 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Threading;
 
 namespace PixelAdventure
 {
-    //לסיים עם ממשק החפצים, ולהכניס אותם למשחק
+    //לסיים עם ממשק החפצים (להוסיף עוד חפצים), ולהכניס אותם למשחק (בעיקר הכנסה של עניין הקרפטינג)
     //לתת פירוט על כל המשחק והסבר על איך משחקים כשנכנסים להלפ
     //לבצע פונקציות של ספאון של חיות נוספות אחרי שכמה מתו ("מחזור")
     //קסמים, קסמים, קסמים (אחרת למה עשיתי קוסם? XD)
+
     //להכניס את ההשפעה של ה-INT וה-DEX למשחק
     //עליית המאנה של קוסם היא כל תור או כל 10 תורות, ואם כל תור איך לעשות שיהיה הבדל בין רמות שונות של INT
 
+    //לחשוב, לכתוב ולממש את האלוריתם לייצור מערות (ואם המשחק מיוצר על ידי סיד, איך לעשות שהמערות יהיו שונות זו מזו אבל יהיו זהות בין משחקים)
+    //לסיים את הממשק של הדלתות ותיבות האוצר ולהכניס אותם למשחק
+    //להוסיף את ממשק ה-NPC
+    //לעשות אפשרות של קניה ומכירה אצל סוחרים (וכמובן לתת לכל סוחר מבחר חפצים שהוא מוכר, האם לעשות הגבלה לכמות שלהם?)
+    //להכניס עוד אזורים חדשים כמו ערים, כניסות למערות וכו' (כדי לממש את כל הדברים הנוספים שעושים)
+    //לעשות שבתוך העיר תהיה מפה נפרדת לעיר שהולכים בה ולמשל אפשר ללכת מהשער לשוק או לטירה וכו' (כלומר לעשות מחלקה נפרדת לעיר כמו שעשינו למערה)
+    //לעדכן את כל הפעולות שהשחקן יכול לעשות כך שאפשר יהיה להשתמש בהן במשחק
+
     class Program
     {
+        public static void Melody()
+        {
+            while (true)
+            {
+                #region melody
+                Console.Beep(262, 500);
+                Console.Beep(784, 500);
+                Console.Beep(262, 500);
+                Console.Beep(784, 250);
+                Console.Beep(784, 250);
+
+                Console.Beep(262, 500);
+                Console.Beep(784, 500);
+                Console.Beep(262, 500);
+                Console.Beep(784, 500);
+
+                Console.Beep(262, 500);
+                Console.Beep(784, 500);
+                Console.Beep(262, 500);
+                Console.Beep(784, 250);
+                Console.Beep(784, 250);
+
+                Console.Beep(262, 500);
+                Console.Beep(784, 500);
+                Console.Beep(262, 750);
+                Console.Beep(262, 250);
+                #endregion
+            }
+        }
+
         public static void PrintMap(Player MyPlayer, Animal[] AnimalList, World MyWorld)
         {
             for (int i = 0; i < MyWorld.Surface.GetLength(0); i++)
@@ -49,6 +89,10 @@ namespace PixelAdventure
             Player myPlayer = null;
             Animal[] AnimalList = null;
 
+            Thread MyMelody = new Thread(new ThreadStart(Melody));
+            MyMelody.Start();
+
+            #region logo
             Console.ForegroundColor = ConsoleColor.White;
 
             string logo = @"d8888b. d888888b db    db d88888b db                                        
@@ -73,6 +117,8 @@ YP   YP Y8888D'    YP    Y88888P VP   V8P    YP    ~Y8888P' 88   YD Y88888P";
 
             Console.WriteLine();
             Console.WriteLine();
+
+            #endregion
 
             Console.Write("Start/Load: ");
             bool load = false;
