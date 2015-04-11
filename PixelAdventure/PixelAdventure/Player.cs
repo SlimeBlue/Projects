@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace PixelAdventure
 {
-    enum Classes { Warrior, Magician, Rouge };
+    enum Classes { Warrior, Magician, Rogue };
 
     class ClassArray
     {
@@ -35,14 +35,14 @@ namespace PixelAdventure
         public int ExpNext;
         public ClassArray[] Stats;
 
-        public Exp(int Level, int ExpNext, ClassArray Warrior, ClassArray Magician, ClassArray Rouge)
+        public Exp(int Level, int ExpNext, ClassArray Warrior, ClassArray Magician, ClassArray Rogue)
         {
             this.Level = Level;
             this.ExpNext = ExpNext;
             Stats = new ClassArray[3];
             Stats[0] = Warrior;
             Stats[1] = Magician;
-            Stats[2] = Rouge;
+            Stats[2] = Rogue;
         }
     }
 
@@ -70,12 +70,13 @@ namespace PixelAdventure
         public int Exp;
         public Classes Class;
         public World MyWorld;
+        public Cave MyCave;
         public int LocationX;
         public int LocationY;
         public int MaxHP;
         public int CurrentHP;
         public int MaxMP;
-        public int CurrentMP;
+        public double CurrentMP;
         public int BaseAtk;
         public int BaseDef;
         public int BaseInt;
@@ -93,6 +94,7 @@ namespace PixelAdventure
             this.Exp = 0;
             this.Class = GetClass();
             this.MyWorld = MyWorld;
+            this.MyCave = null;
             this.MyInventory = new Inventory();
             this.MyWeapon = null;
             this.MyArmor = null;
@@ -105,7 +107,8 @@ namespace PixelAdventure
                 case Classes.Warrior:
                     MaxHP = new Random().Next(7, 11);
                     CurrentHP = MaxHP;
-                    MaxMP = CurrentMP = 0;
+                    MaxMP = 0;
+                    CurrentMP = 0.0;
                     BaseAtk = 10;
                     BaseDef = 7;
                     BaseInt = 4;
@@ -116,7 +119,8 @@ namespace PixelAdventure
                 case Classes.Magician:
                     MaxHP = new Random().Next(4, 6);
                     CurrentHP = MaxHP;
-                    MaxMP = CurrentMP = 10;
+                    MaxMP = 10;
+                    CurrentMP = 10.0;
                     BaseAtk = 7;
                     BaseDef = 4;
                     BaseInt = 10;
@@ -126,10 +130,11 @@ namespace PixelAdventure
                             MySpellBook.Add(s);
                     break;
 
-                case Classes.Rouge:
+                case Classes.Rogue:
                     MaxHP = new Random().Next(4, 8);
                     CurrentHP = MaxHP;
-                    MaxMP = CurrentMP = 0;
+                    MaxMP = 0;
+                    CurrentMP = 0.0;
                     BaseAtk = 6;
                     BaseDef = 4;
                     BaseInt = 6;
@@ -139,13 +144,14 @@ namespace PixelAdventure
             }
         }
 
-        public Player(string Name, World MyWorld, Classes MyClass, int LocationX, int LocationY)
+        public Player(string Name, World MyWorld, Classes MyClass, int Level, int EXP, int LocationX, int LocationY, int MaxHP, int CurrentHP, int MaxMP, double CurrentMP)
         {
             this.Name = Name;
-            this.Level = 1;
-            this.Exp = 0;
+            this.Level = Level;
+            this.Exp = EXP;
             this.Class = MyClass;
             this.MyWorld = MyWorld;
+            this.MyCave = null;
             this.MyInventory = new Inventory();
             this.MyWeapon = null;
             this.MyArmor = null;
@@ -153,40 +159,68 @@ namespace PixelAdventure
             this.LocationX = LocationX;
             this.LocationY = LocationY;
 
+            int LevelIndex = -1;
             switch (Class)
             {
                 case Classes.Warrior:
-                    MaxHP = new Random().Next(7, 11);
-                    CurrentHP = MaxHP;
-                    MaxMP = CurrentMP = 0;
-                    BaseAtk = 10;
-                    BaseDef = 7;
-                    BaseInt = 4;
-                    BaseDex = 4;
+                    this.MaxHP = MaxHP;
+                    this.CurrentHP = CurrentHP;
+                    this.MaxMP = MaxMP;
+                    this.CurrentMP = CurrentMP;
+
+                    for (int i = 0; i < ExpTable.MyTable.Length; i++)
+                        if (ExpTable.MyTable[i].Level == Level)
+                        {
+                            LevelIndex = i;
+                            break;
+                        }
+                    this.BaseAtk = ExpTable.MyTable[LevelIndex].Stats[0].Atk;
+                    this.BaseDef = ExpTable.MyTable[LevelIndex].Stats[0].Def;
+                    this.BaseInt = ExpTable.MyTable[LevelIndex].Stats[0].Int;
+                    this.BaseDex = ExpTable.MyTable[LevelIndex].Stats[0].Dex;
+
                     MyInventory.Add(new MyItem(0, 1));
                     break;
 
                 case Classes.Magician:
-                    MaxHP = new Random().Next(4, 6);
-                    CurrentHP = MaxHP;
-                    MaxMP = CurrentMP = 10;
-                    BaseAtk = 7;
-                    BaseDef = 4;
-                    BaseInt = 10;
-                    BaseDex = 6;
+                    this.MaxHP = MaxHP;
+                    this.CurrentHP = CurrentHP;
+                    this.MaxMP = MaxMP;
+                    this.CurrentMP = CurrentMP;
+                    
+                    for (int i = 0; i < ExpTable.MyTable.Length; i++)
+                        if (ExpTable.MyTable[i].Level == Level)
+                        {
+                            LevelIndex = i;
+                            break;
+                        }
+                    this.BaseAtk = ExpTable.MyTable[LevelIndex].Stats[0].Atk;
+                    this.BaseDef = ExpTable.MyTable[LevelIndex].Stats[0].Def;
+                    this.BaseInt = ExpTable.MyTable[LevelIndex].Stats[0].Int;
+                    this.BaseDex = ExpTable.MyTable[LevelIndex].Stats[0].Dex;
+
                     foreach (Spell s in SpellTable.MyTable)
-                        if (s.Level == 1)
+                        if (s.Level <= Level)
                             MySpellBook.Add(s);
                     break;
 
-                case Classes.Rouge:
-                    MaxHP = new Random().Next(4, 8);
-                    CurrentHP = MaxHP;
-                    MaxMP = CurrentMP = 0;
-                    BaseAtk = 6;
-                    BaseDef = 4;
-                    BaseInt = 6;
-                    BaseDex = 10;
+                case Classes.Rogue:
+                    this.MaxHP = MaxHP;
+                    this.CurrentHP = CurrentHP;
+                    this.MaxMP = MaxMP;
+                    this.CurrentMP = CurrentMP;
+                    
+                    for (int i = 0; i < ExpTable.MyTable.Length; i++)
+                        if (ExpTable.MyTable[i].Level == Level)
+                        {
+                            LevelIndex = i;
+                            break;
+                        }
+                    this.BaseAtk = ExpTable.MyTable[LevelIndex].Stats[0].Atk;
+                    this.BaseDef = ExpTable.MyTable[LevelIndex].Stats[0].Def;
+                    this.BaseInt = ExpTable.MyTable[LevelIndex].Stats[0].Int;
+                    this.BaseDex = ExpTable.MyTable[LevelIndex].Stats[0].Dex;
+
                     MyInventory.Add(new MyItem(14, 1));
                     break;
             }
@@ -194,7 +228,7 @@ namespace PixelAdventure
 
         static Classes GetClass() //Sets a class according to input
         {
-            Console.Write("Choose a class (Warrior, Magician, Rouge): ");
+            Console.Write("Choose a class (Warrior, Magician, Rogue): ");
             string str = Console.ReadLine();
             switch (str.ToLower())
             {
@@ -202,8 +236,8 @@ namespace PixelAdventure
                     return Classes.Warrior;
                 case "magician":
                     return Classes.Magician;
-                case "rouge":
-                    return Classes.Rouge;
+                case "rogue":
+                    return Classes.Rogue;
                 default:
                     Console.WriteLine("The value you entered is invalid.");
                     return GetClass();
@@ -238,9 +272,12 @@ namespace PixelAdventure
             Console.WriteLine("Name: " + Name);
             Console.WriteLine("Class: " + Class);
             Console.WriteLine("Level: " + Level + ". EXP: " + Exp);
-            Console.WriteLine("Location: [" + LocationX + "," + LocationY + "]. Landscape: " + MyWorld.Surface[LocationX, LocationY].Location);
+            if (MyCave == null)
+                Console.WriteLine("Location: [" + LocationX + "," + LocationY + "]. Landscape: " + MyWorld.Surface[LocationX, LocationY].Location);
+            else
+                Console.WriteLine("Location: [" + LocationX + "," + LocationY + "]. Landscape: " + MyCave.Layout[LocationX, LocationY].Location);
             if (Class == Classes.Magician)
-                Console.WriteLine("ATK: " + BaseAtk + ". DEF: " + BaseDef + ". INT: " + BaseInt + ". DEX: " + BaseDex + ". HP: " + CurrentHP + "/" + MaxHP + ". MP: " + CurrentMP + "/" + MaxMP);
+                Console.WriteLine("ATK: " + BaseAtk + ". DEF: " + BaseDef + ". INT: " + BaseInt + ". DEX: " + BaseDex + ". HP: " + CurrentHP + "/" + MaxHP + ". MP: " + (int)CurrentMP + "/" + MaxMP);
             else
                 Console.WriteLine("ATK: " + BaseAtk + ". DEF: " + BaseDef + ". INT: " + BaseInt + ". DEX: " + BaseDex + ". HP: " + CurrentHP + "/" + MaxHP);
         }

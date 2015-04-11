@@ -37,12 +37,6 @@ namespace PixelAdventure
             this.Seen = false;
         }
 
-        public bool Explore()
-        {
-            Seen = true;
-            return true;
-        }
-
         public string Name() //Returns the name of the landscape
         {
             switch (Location)
@@ -100,62 +94,151 @@ namespace PixelAdventure
     {
         public CavePlot[,] Layout;
         public Player MyPlayer;
-        static byte[] caveRand;
-        static int randCount;
+        public int caveLocationX;
+        public int caveLocationY;
 
-        public Cave(int seed)
+        static byte[] caveRand;
+
+        static int birthLimit = 4;
+        static int deathLimit = 3;
+        static float aliveChance = 0.35f;
+        static int stepsNumber = 100;
+        static int entranceLimit = 6;
+
+        bool[,] GenerateMap(int width, int height)
         {
+            bool[,] cellMap = new bool[width, height];
+            cellMap = InitializeMap(cellMap);
+            for (int i = 0; i < stepsNumber; i++)
+                cellMap = DoSimulationStep(cellMap);
+            return cellMap;
+        }
+
+        bool[,] InitializeMap(bool [,] map)
+        {
+            for (int i = 0; i < map.GetLength(0); i++)
+                for (int j = 0; j < map.GetLength(1); j++)
+                    if (caveRand[i * map.GetLength(1) + j] < byte.MaxValue * aliveChance)
+                        map[i, j] = true;
+                    else
+                        map[i, j] = false;
+            return map;
+        }
+
+        bool[,] DoSimulationStep(bool[,] oldMap)
+        {
+            bool[,] newMap = new bool[oldMap.GetLength(0),oldMap.GetLength(1)];
+            int nbs;
+            for (int i = 0; i < oldMap.GetLength(0); i++)
+                for (int j = 0; j < oldMap.GetLength(1); j++)
+                {
+                    nbs = CountAliveNeighbours(oldMap, i, j);
+                    if (oldMap[i, j])
+                        if (nbs < deathLimit)
+                            newMap[i, j] = false;
+                        else
+                            newMap[i, j] = true;
+                    else
+                        if (nbs > birthLimit)
+                            newMap[i, j] = true;
+                        else
+                            newMap[i, j] = false;
+                }
+            return newMap;
+        }
+
+        int CountAliveNeighbours(bool[,] map, int x, int y)
+        {
+            int count = 0;
+            for (int i = -1; i < 2; i++)
+                for (int j = -1; j<2; j++)
+                    if (i != 0 || j != 0)
+                        if (x+i < 0 || y+j < 0 || x+i>=map.GetLength(0) || y+j >=map.GetLength(1))
+                            count = count + 1;
+                        else if (map[x+i,y+j])
+                            count = count + 1;
+            return count;
+        }
+
+        public Cave(int seed, int caveLocationX, int caveLocationY)
+        {
+            this.caveLocationX = caveLocationX;
+            this.caveLocationY = caveLocationY;
+
             int x, y;
 
             if (seed < 1)
             {
                 x = new Random().Next(15, 25);
                 y = new Random().Next(10, 20);
-                caveRand = new byte[4 * x * y];
+                caveRand = new byte[x * y];
                 new Random().NextBytes(caveRand);
             }
             else
             {
                 x = new Random(seed).Next(15, 25);
                 y = new Random(seed).Next(10, 20);
-                caveRand = new byte[4 * x * y];
+                caveRand = new byte[x * y];
                 new Random(seed).NextBytes(caveRand);
             }
             Layout = new CavePlot[x, y];
-
-            int xEntrance, yEntrance;
-            if (seed < 1)
-            {
-                xEntrance = caveRand[0] % x;
-                yEntrance = caveRand[1] % y;
-            }
-            int randCount = 2;
-
-            int numDirec = 0;
-            int[] turns; // 0-forward, 1-turn left, 2-turn right
-            numDirec = caveRand[randCount] % 3;
-            turns = new int[numDirec];
-            for (int i = 0; i < numDirec; i++)
-            {
-                randCount++;
-                turns[i] = caveRand[randCount] % 4;
-            }
-
+            
+            bool[,] boolLayout = GenerateMap(x, y);
             for (int i = 0; i < x; i++)
                 for (int j = 0; j < y; j++)
-                    if (Layout[i, j] == null)
+                    if (!boolLayout[i, j])
+                        Layout[i, j] = new CavePlot(CaveType.Cave);
+                    else
                         Layout[i, j] = new CavePlot(CaveType.Wall);
 
-                    caveRand = null;
+            for (int i = 0; i < Layout.GetLength(0); i++)
+            {
+                Layout[i, 0] = new CavePlot(CaveType.Wall);
+                Layout[i, Layout.GetLength(1) - 1] = new CavePlot(CaveType.Wall);
+            }
+            for (int j = 0; j < Layout.GetLength(1); j++)
+            {
+                Layout[0, j] = new CavePlot(CaveType.Wall);
+                Layout[Layout.GetLength(0) - 1, j] = new CavePlot(CaveType.Wall);
+            }
+
+            int nbs;
+            while (true)
+            {
+                for (int i = 0; i < x; i++)
+                    for (int j = 0; j < y; j++)
+                        if (!boolLayout[i, j])
+                        {
+                            nbs = CountAliveNeighbours(boolLayout, i, j);
+                            if (8 - nbs >= entranceLimit)
+                            {
+                                Layout[i, j] = new CavePlot(CaveType.Entrance);
+                                caveRand = null;
+                                boolLayout = null;
+                                return;
+                            }
+                        }
+            }
         }
-        public Cave(Player MyPlayer, int seed)
-            : this(seed)
+        public Cave(Player MyPlayer, int seed, int caveLocationX, int caveLocationY)
+            : this(seed, caveLocationX, caveLocationY)
         {
             this.MyPlayer = MyPlayer;
         }
-        public Cave(CavePlot[,] MyLayout)
+        public Cave(CavePlot[,] MyLayout, int caveLocationX, int caveLocationY)
         {
             this.Layout = MyLayout;
+            this.caveLocationX = caveLocationX;
+            this.caveLocationY = caveLocationY;
+        }
+
+        public int[] FindEntrance()
+        {
+            for (int i = 0; i < Layout.GetLength(0); i++)
+                for (int j = 0; j < Layout.GetLength(1); j++)
+                    if (Layout[i, j].Location == CaveType.Entrance)
+                        return new int[2] { i, j };
+            return null;
         }
 
         public void Print()

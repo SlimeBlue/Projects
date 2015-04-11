@@ -9,7 +9,7 @@ namespace PixelAdventure
 {
     class Action
     {
-        public static string[] actions = { "go", "attack", "help", "equip", "bag", "eat", "cast", "spellbook", /*"save", "load",*/ "pick", "drop" };
+        public static string[] actions = { "go", "attack", "help", "equip", "bag", "eat", "cast", "spellbook", "save", /*"load",*/ "pick", "drop", "open", "enter", "exit" };
 
         public static bool Start(string Input, Player MyPlayer) //Invokes an action
         {
@@ -116,7 +116,7 @@ namespace PixelAdventure
                         return false;
                     }
 
-                    flag = Eat(Parts[1], MyPlayer);
+                    flag = Equip(Parts[1], MyPlayer);
                     Console.WriteLine();
                     return flag;
 
@@ -227,6 +227,48 @@ namespace PixelAdventure
                     Console.WriteLine();
                     return flag;
 
+                case "open":
+                    if (Parts.Length == 1)
+                    {
+                        Console.WriteLine("This action needs a name of an item!");
+                        Console.WriteLine();
+                        return false;
+                    }
+                    if (Parts.Length > 2)
+                    {
+                        Console.WriteLine("There are too many adds for this action!");
+                        Console.WriteLine();
+                        return false;
+                    }
+
+                    flag = Open(Parts[1], MyPlayer);
+                    Console.WriteLine();
+                    return flag;
+
+                case "enter":
+                    if (Parts.Length > 1)
+                    {
+                        Console.WriteLine("There are too many adds for this action!");
+                        Console.WriteLine();
+                        return false;
+                    }
+
+                    flag = Enter(MyPlayer);
+                    Console.WriteLine();
+                    return flag;
+
+                case "exit":
+                    if (Parts.Length > 1)
+                    {
+                        Console.WriteLine("There are too many adds for this action!");
+                        Console.WriteLine();
+                        return false;
+                    }
+
+                    flag = Exit(MyPlayer);
+                    Console.WriteLine();
+                    return flag;
+
                 default:
                     Console.WriteLine("There is no such an action!");
                     Console.WriteLine();
@@ -318,6 +360,15 @@ namespace PixelAdventure
                                     if (parts[1].ToLower() == ItemTable.MyTable[i].Name.Substring(0, parts[1].Length).ToLower())
                                         return ItemTable.MyTable[i].Name.Substring(parts[1].Length).ToLower();
                             break;
+
+                        case "open":
+                            if (parts[1].Length < 4)
+                                if (parts[1].ToLower() == "door".Substring(0, parts[1].Length).ToLower())
+                                    return "door".Substring(parts[1].Length).ToLower();
+                            if (parts[1].Length < 5)
+                                if (parts[1].ToLower() == "chest".Substring(0, parts[1].Length).ToLower())
+                                    return "chest".Substring(parts[1].Length).ToLower();
+                            break;
                     }
                     break;
 
@@ -362,37 +413,77 @@ namespace PixelAdventure
             Parameters = null;
         }*/
 
-        public static bool CheckCanGo(int Direction, Player MyPlayer) //Checks if the player can move in that direction. 0-north, 1-south, 2-east, 3-west
+        static bool CheckCanGo(int Direction, Player MyPlayer) //Checks if the player can move in that direction. 0-north, 1-south, 2-east, 3-west
         {
-            Landscapes NextLocation;
-            switch (Direction)
+            if (MyPlayer.MyCave == null)
             {
-                case 0:
-                    NextLocation = MyPlayer.MyWorld.Surface[MyPlayer.LocationX - 1, MyPlayer.LocationY].Location;
-                    break;
+                Landscapes NextLocation;
+                switch (Direction)
+                {
+                    case 0:
+                        NextLocation = MyPlayer.MyWorld.Surface[MyPlayer.LocationX - 1, MyPlayer.LocationY].Location;
+                        break;
 
-                case 1:
-                    NextLocation = MyPlayer.MyWorld.Surface[MyPlayer.LocationX + 1, MyPlayer.LocationY].Location;
-                    break;
+                    case 1:
+                        NextLocation = MyPlayer.MyWorld.Surface[MyPlayer.LocationX + 1, MyPlayer.LocationY].Location;
+                        break;
 
-                case 2:
-                    NextLocation = MyPlayer.MyWorld.Surface[MyPlayer.LocationX, MyPlayer.LocationY + 1].Location;
-                    break;
+                    case 2:
+                        NextLocation = MyPlayer.MyWorld.Surface[MyPlayer.LocationX, MyPlayer.LocationY + 1].Location;
+                        break;
 
-                default:
-                    NextLocation = MyPlayer.MyWorld.Surface[MyPlayer.LocationX, MyPlayer.LocationY - 1].Location;
-                    break;
+                    default:
+                        NextLocation = MyPlayer.MyWorld.Surface[MyPlayer.LocationX, MyPlayer.LocationY - 1].Location;
+                        break;
+                }
+                return (NextLocation != Landscapes.Cliffs && NextLocation != Landscapes.Ocean && NextLocation != Landscapes.RockyMountains);
             }
-            return (NextLocation != Landscapes.Cliffs && NextLocation != Landscapes.Ocean && NextLocation != Landscapes.RockyMountains);
-        }
+            else
+            {
+                CaveType NextLocation;
+                switch (Direction)
+                {
+                    case 0:
+                        NextLocation = MyPlayer.MyCave.Layout[MyPlayer.LocationX - 1, MyPlayer.LocationY].Location;
+                        break;
 
+                    case 1:
+                        NextLocation = MyPlayer.MyCave.Layout[MyPlayer.LocationX + 1, MyPlayer.LocationY].Location;
+                        break;
+
+                    case 2:
+                        NextLocation = MyPlayer.MyCave.Layout[MyPlayer.LocationX, MyPlayer.LocationY + 1].Location;
+                        break;
+
+                    default:
+                        NextLocation = MyPlayer.MyCave.Layout[MyPlayer.LocationX, MyPlayer.LocationY - 1].Location;
+                        break;
+                }
+                return (NextLocation != CaveType.Wall);
+            }
+        }
+        static void Reveal(Player MyPlayer)
+        {
+            if (MyPlayer.MyCave == null)
+                return;
+
+            for (int i = -1; i < 2; i++)
+                for (int j = -1; j < 2; j++)
+                    if (!(MyPlayer.LocationX + i < 0 || MyPlayer.LocationY + j < 0 || 
+                        MyPlayer.LocationX + i >= MyPlayer.MyCave.Layout.GetLength(0) || 
+                        MyPlayer.LocationY + j >= MyPlayer.MyCave.Layout.GetLength(1)))
+                        MyPlayer.MyCave.Layout[MyPlayer.LocationX + i, MyPlayer.LocationY + j].Seen = true;
+        }
         static bool Go(string Direction, Player MyPlayer) //Moves the player if it can
         {
             switch (Direction.ToLower())
             {
                 case "north":
                     if (CheckCanGo(0, MyPlayer))
+                    {
                         MyPlayer.LocationX--;
+                        Reveal(MyPlayer);
+                    }
                     else
                     {
                         Console.WriteLine("You can't go there!");
@@ -402,7 +493,10 @@ namespace PixelAdventure
 
                 case "south":
                     if (CheckCanGo(1, MyPlayer))
+                    {
                         MyPlayer.LocationX++;
+                        Reveal(MyPlayer);
+                    }
                     else
                     {
                         Console.WriteLine("You can't go there!");
@@ -412,7 +506,10 @@ namespace PixelAdventure
 
                 case "east":
                     if (CheckCanGo(2, MyPlayer))
+                    {
                         MyPlayer.LocationY++;
+                        Reveal(MyPlayer);
+                    }
                     else
                     {
                         Console.WriteLine("You can't go there!");
@@ -422,7 +519,10 @@ namespace PixelAdventure
 
                 case "west":
                     if (CheckCanGo(3, MyPlayer))
+                    {
                         MyPlayer.LocationY--;
+                        Reveal(MyPlayer);
+                    }
                     else
                     {
                         Console.WriteLine("You can't go there!");
@@ -436,7 +536,10 @@ namespace PixelAdventure
             }
 
             Console.WriteLine("Your location is: [" + MyPlayer.LocationX + "," + MyPlayer.LocationY + "].");
-            Console.WriteLine("You are in: " + MyPlayer.MyWorld.Surface[MyPlayer.LocationX, MyPlayer.LocationY].Name() + ".");
+            if (MyPlayer.MyCave == null)
+                Console.WriteLine("You are in: " + MyPlayer.MyWorld.Surface[MyPlayer.LocationX, MyPlayer.LocationY].Name() + ".");
+            else
+                Console.WriteLine("You are in: " + MyPlayer.MyCave.Layout[MyPlayer.LocationX, MyPlayer.LocationY].Name() + ".");
             /*Console.WriteLine("To your north: " + MyPlayer.MyWorld.Surface[MyPlayer.LocationX - 1, MyPlayer.LocationY].Name() + ".");
             Console.WriteLine("To your south: " + MyPlayer.MyWorld.Surface[MyPlayer.LocationX + 1, MyPlayer.LocationY].Name() + ".");
             Console.WriteLine("To your east: " + MyPlayer.MyWorld.Surface[MyPlayer.LocationX, MyPlayer.LocationY + 1].Name() + ".");
@@ -590,7 +693,7 @@ namespace PixelAdventure
                     Console.WriteLine("Using the command Go and a direction (north, south, east or west), the player will move in that direction.");
                     break;
                 case "attack":
-                    Console.WriteLine("Using the command Attack and a target, will make the player to attack and damage the target.");
+                    Console.WriteLine("Using the command Attack and a target, will make the player attack and damage the target.");
                     break;
                 case "help":
                     Console.WriteLine("Using the command Help, the list and information of the commands is shown. With another command it will show the information of it.");
@@ -599,7 +702,7 @@ namespace PixelAdventure
                     Console.WriteLine("Using the command Bag, the list of items the player have in its inventory is shown.");
                     break;
                 case "eat":
-                    Console.WriteLine("Using the command Eat and an item, will make the player to eat the item.");
+                    Console.WriteLine("Using the command Eat and an item, will make the player eat the item.");
                     break;
                 case "cast":
                     Console.WriteLine("Using the command Cast, a spell and a target, will make the player cast the spell on that target");
@@ -608,13 +711,22 @@ namespace PixelAdventure
                     Console.WriteLine("Using the command Spellbook, the list of spells the player know is shown.");
                     break;
                 case "save":
-                    //
+                    Console.WriteLine("Using the command Save, the game is saved under the file " + '"' + "save [current date].sav" + '"' + ".");
                     break;
-                case "load":
-                    //
+                case "pick":
+                    Console.WriteLine("Using the command Pick and an item, will make the player pick the item from the ground.");
+                    break;
+                case "drop":
+                    Console.WriteLine("Using the command Drop and an item, will make the player drop the item on the ground.");
+                    break;
+                case "equip":
+                    Console.WriteLine("Using the command Equip and an item, will make the player equip the item.");
+                    break;
+                case "open":
+                    Console.WriteLine("Using the command Open and a target, will make the player open the target.");
                     break;
             }
-            return true;
+            return false;
         }
 
         static bool Help()
@@ -628,7 +740,12 @@ namespace PixelAdventure
             Console.WriteLine("- Help : Shows all the commands in the game.");
             Console.WriteLine("- Help (+ Command) : Shows the explanation and syntax of a command.");
             Console.WriteLine("- Spellbook : Shows the spells the player knows.");
-            return true;
+            Console.WriteLine("- Save : Saves the game.");
+            Console.WriteLine("- Pick (+ Item) : The player picks up the item from the ground (if possible).");
+            Console.WriteLine("- Drop (+ Item) : The player drops the item on the ground (if possible).");
+            Console.WriteLine("- Equip (+ Item) : The player equips the item (if possible).");
+            Console.WriteLine("- Open (+ Target) : The player opens the target (if possible).");
+            return false;
         }
 
         /*static bool Equip(string Name, Player MyPlayer)
@@ -687,7 +804,7 @@ namespace PixelAdventure
                 Console.Write(MyPlayer.MyInventory[i].Amount + " " + MyPlayer.MyInventory[i].Name + ", ");
             if (MyPlayer.MyInventory.Count != 0)
                 Console.WriteLine(MyPlayer.MyInventory[MyPlayer.MyInventory.Count - 1].Amount + " " + MyPlayer.MyInventory[MyPlayer.MyInventory.Count - 1].Name + ".");
-            return true;
+            return false;
         }
 
         static bool Eat(string Name, Player MyPlayer)
@@ -802,8 +919,17 @@ namespace PixelAdventure
 
                     if (s.MyType == SpellType.Attack && MyTarget != null)
                     {
-                        if (Attack(MyTarget, MyPlayer, MyPlayer.MyWorld.Surface[MyPlayer.LocationX, MyPlayer.LocationY].Entities, s.Amount))
+                        bool attackSuccess;
+                        if (attackSuccess = Attack(MyTarget, MyPlayer, MyPlayer.MyWorld.Surface[MyPlayer.LocationX, MyPlayer.LocationY].Entities, s.Amount))
+                        {
                             MyPlayer.CurrentMP -= s.ManaCost;
+                            return attackSuccess;
+                        }
+                    }
+                    else if (MyTarget == null)
+                    {
+                        Console.WriteLine("This spell requires a target!");
+                        return false;
                     }
 
                     if (s.MyType == SpellType.Heal)
@@ -824,7 +950,7 @@ namespace PixelAdventure
             Console.WriteLine("Your Spell Book:");
             for (int i = 0; i < MyPlayer.MySpellBook.Count; i++)
                 Console.WriteLine(MyPlayer.MySpellBook[i].Name + ". MP: " + MyPlayer.MySpellBook[i].ManaCost + ".");
-            return true;
+            return false;
         }
 
         static bool Save(Player MyPlayer)
@@ -836,8 +962,6 @@ namespace PixelAdventure
 
             //player
             saver.WriteLine(MyPlayer.Name);
-            saver.WriteLine(MyPlayer.LocationX);
-            saver.WriteLine(MyPlayer.LocationY);
             saver.WriteLine(MyPlayer.Class.ToString());
             saver.WriteLine(MyPlayer.Level);
             saver.WriteLine(MyPlayer.Exp);
@@ -854,10 +978,8 @@ namespace PixelAdventure
             saver.WriteLine("end_player");
 
             //inventory
-            for (int i = 0; i < MyPlayer.MyInventory.Count - 1; i++)
-                saver.Write(MyPlayer.MyInventory[i].ID + ",");
-            if (MyPlayer.MyInventory.Count != 0)
-                saver.WriteLine(MyPlayer.MyInventory[MyPlayer.MyInventory.Count - 1].ID);
+            for (int i = 0; i < MyPlayer.MyInventory.Count; i++)
+                saver.WriteLine(MyPlayer.MyInventory[i].ID + "," + MyPlayer.MyInventory[i].Amount);
             saver.WriteLine("end_inventory");
 
             //tools
@@ -882,7 +1004,7 @@ namespace PixelAdventure
                 for (int j = 0; j < surf.GetLength(1); j++)
                 {
                     saver.Write(i + "," + j + ";" + surf[i, j].Location.ToString());
-                    if (surf[i, j].Entities.Count != 0)
+                    //if (surf[i, j].Entities.Count != 0)
                         saver.Write(";");
 
                     for (int k = 0; k < surf[i, j].Entities.Count - 1; k++)
@@ -915,7 +1037,9 @@ namespace PixelAdventure
 
             saver.Close();
 
-            return true;
+            Console.WriteLine("Saved!");
+
+            return false;
         }
 
         static bool Pick(string Name, Player MyPlayer)
@@ -1041,6 +1165,46 @@ namespace PixelAdventure
             }
 
             return true;
+        }
+
+        static bool Enter(Player MyPlayer)
+        {
+            if (MyPlayer.MyWorld.Surface[MyPlayer.LocationX, MyPlayer.LocationY].Caves.Count > 0)
+            {
+                MyPlayer.MyCave = MyPlayer.MyWorld.Surface[MyPlayer.LocationX, MyPlayer.LocationY].Caves[0];
+                MyPlayer.LocationX = MyPlayer.MyCave.FindEntrance()[0];
+                MyPlayer.LocationY = MyPlayer.MyCave.FindEntrance()[1];
+                return true;
+            }
+            else
+            {
+                Console.WriteLine("There is no cave in this location.");
+                return false;
+            }
+        }
+
+        static bool Exit(Player MyPlayer)
+        {
+            if (MyPlayer.MyCave == null)
+            {
+                Console.WriteLine("You can't exit while outside a cave.");
+                return false;
+            }
+            else
+            {
+                if (MyPlayer.MyCave.Layout[MyPlayer.LocationX, MyPlayer.LocationY].Location == CaveType.Entrance)
+                {
+                    MyPlayer.LocationX = MyPlayer.MyCave.caveLocationX;
+                    MyPlayer.LocationY = MyPlayer.MyCave.caveLocationY;
+                    MyPlayer.MyCave = null;
+                    return true;
+                }
+                else
+                {
+                    Console.WriteLine("You can't exist through here.");
+                    return false;
+                }
+            }
         }
     }
 }

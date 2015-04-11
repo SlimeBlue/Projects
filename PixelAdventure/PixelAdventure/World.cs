@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace PixelAdventure
 {
-    enum Landscapes { Planes, RockyMountains, Garden, Hut, Graveyard, Ocean, Cliffs, Beach, Hills, Forest }
+    enum Landscapes { Planes, RockyMountains, Garden, Hut, Graveyard, Ocean, Cliffs, Beach, Hills, Forest, Cave }
 
     class Plot
     {
@@ -17,6 +17,7 @@ namespace PixelAdventure
         public List<Animal> Entities;
         public List<Chest> Chests;
         public List<Door> Doors;
+        public List<Cave> Caves;
 
         public Plot(/*int ID, */Landscapes Location) //Creates a plot
         {
@@ -26,6 +27,7 @@ namespace PixelAdventure
             this.Entities = new List<Animal>();
             this.Chests = new List<Chest>();
             this.Doors = new List<Door>();
+            this.Caves = new List<Cave>();
         }
 
         public string Name() //Returns the name of the landscape
@@ -58,6 +60,9 @@ namespace PixelAdventure
 
                 case Landscapes.Garden:
                     return "Garden";
+
+                case Landscapes.Cave:
+                    return "Cave";
 
                 default:
                     return "???";
@@ -119,6 +124,9 @@ namespace PixelAdventure
 
                 case Landscapes.Garden:
                     return ConsoleColor.Magenta;
+
+                case Landscapes.Cave:
+                    return ConsoleColor.DarkCyan;
 
                 default:
                     return ConsoleColor.Black;
@@ -741,6 +749,23 @@ namespace PixelAdventure
             }
         }
 
+        private void SetCave(int seed) //Defines the place of the cave
+        {
+            bool flag = false;
+            while (!flag)
+            {
+                int x = worldRand[randCount] % Surface.GetLength(0);
+                int y = worldRand[randCount + 1] % Surface.GetLength(1);
+                randCount += 2;
+                if (Surface[x, y].Location == Landscapes.Hills)
+                {
+                    Surface[x, y].Location = Landscapes.Cave;
+                    Surface[x, y].Caves.Add(new Cave(seed, x, y));
+                    flag = true;
+                }
+            }
+        }
+
         private void SetBorders() //Defines the plots of the borders of the world
         {
             //Defines the plot of the left-upper corner
@@ -901,6 +926,7 @@ namespace PixelAdventure
             for (int i = 1; i < (Surface.GetLength(0) - 1) / 2 || i < (Surface.GetLength(1) - 1) / 2; i++)
                 SetInner(i);
 
+            SetCave(seed);
             SetForest();
             worldRand = null;
         }
@@ -908,6 +934,10 @@ namespace PixelAdventure
             : this(seed)
         {
             this.MyPlayer = MyPlayer;
+            for (int i = 0; i < Surface.GetLength(0); i++)
+                for (int j = 0; j < Surface.GetLength(1); j++)
+                    if (Surface[i, j].Caves.Count > 0)
+                        Surface[i, j].Caves[0].MyPlayer = MyPlayer;
         }
         public World(Plot[,] MySurface)
         {

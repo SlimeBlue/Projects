@@ -24,37 +24,49 @@ namespace PixelAdventure
     //לעשות שבתוך העיר תהיה מפה נפרדת לעיר שהולכים בה ולמשל אפשר ללכת מהשער לשוק או לטירה וכו' (כלומר לעשות מחלקה נפרדת לעיר כמו שעשינו למערה)
     //לעדכן את כל הפעולות שהשחקן יכול לעשות כך שאפשר יהיה להשתמש בהן במשחק
 
+    //לעשות שכל המשתנים האקראיים במשחק יהיו מאותו האחד (כדי למנוע כפילויות)
+
     class Program
     {
+        public static bool stopMelody = false;
+
+        #region melody
+        public static int[][] melodyArray = new int[][] {
+            new int[] { 262, 500 },
+            new int[] { 784, 500 },
+            new int[] { 262, 500 },
+            new int[] { 784, 250 },
+            new int[] { 784, 250 },
+
+            new int[] { 262, 500 },
+            new int[] { 784, 500 },
+            new int[] { 262, 500 },
+            new int[] { 784, 500 },
+
+            new int[] { 262, 500 },
+            new int[] { 784, 500 },
+            new int[] { 262, 500 },
+            new int[] { 784, 250 },
+            new int[] { 784, 250 },
+
+            new int[] { 262, 500 },
+            new int[] { 784, 500 },
+            new int[] { 262, 750 },
+            new int[] { 262, 250 }
+        };
+
         public static void Melody()
         {
-            while (true)
+            int index = 0;
+            while (!stopMelody)
             {
-                #region melody
-                Console.Beep(262, 500);
-                Console.Beep(784, 500);
-                Console.Beep(262, 500);
-                Console.Beep(784, 250);
-                Console.Beep(784, 250);
-
-                Console.Beep(262, 500);
-                Console.Beep(784, 500);
-                Console.Beep(262, 500);
-                Console.Beep(784, 500);
-
-                Console.Beep(262, 500);
-                Console.Beep(784, 500);
-                Console.Beep(262, 500);
-                Console.Beep(784, 250);
-                Console.Beep(784, 250);
-
-                Console.Beep(262, 500);
-                Console.Beep(784, 500);
-                Console.Beep(262, 750);
-                Console.Beep(262, 250);
-                #endregion
+                if (index == melodyArray.Length)
+                    index = 0;
+                Console.Beep(melodyArray[index][0], melodyArray[index][1]);
+                index++;
             }
         }
+        #endregion
 
         public static void PrintMap(Player MyPlayer, Animal[] AnimalList, World MyWorld)
         {
@@ -71,6 +83,21 @@ namespace PixelAdventure
                             Console.BackgroundColor = ConsoleColor.DarkRed;
                         else
                             Console.BackgroundColor = ConsoleColor.Red;
+                    Console.Write("  ");
+                }
+                Console.WriteLine();
+            }
+            Console.BackgroundColor = ConsoleColor.Black;
+        }
+        public static void PrintCaveMap(Player MyPlayer, Cave MyCave)
+        {
+            for (int i = 0; i < MyCave.Layout.GetLength(0); i++)
+            {
+                for (int j = 0; j < MyCave.Layout.GetLength(1); j++)
+                {
+                    Console.BackgroundColor = MyCave.Layout[i, j].Color();
+                    if (i == MyPlayer.LocationX && j == MyPlayer.LocationY)
+                        Console.BackgroundColor = ConsoleColor.Red;
                     Console.Write("  ");
                 }
                 Console.WriteLine();
@@ -94,6 +121,10 @@ namespace PixelAdventure
 
             #region logo
             Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine();
 
             string logo = @"d8888b. d888888b db    db d88888b db                                        
 88  `8D   `88'   `8b  d8' 88'     88                                        
@@ -115,6 +146,7 @@ YP   YP Y8888D'    YP    Y88888P VP   V8P    YP    ~Y8888P' 88   YD Y88888P";
             Console.WriteLine(" :-)");
             Console.ForegroundColor = ConsoleColor.Gray;
 
+            Console.WriteLine();
             Console.WriteLine();
             Console.WriteLine();
 
@@ -151,6 +183,7 @@ YP   YP Y8888D'    YP    Y88888P VP   V8P    YP    ~Y8888P' 88   YD Y88888P";
                 {
                     Console.WriteLine("Failed to load!");
                     Console.ReadKey();
+                    stopMelody = true;
                     return;
                 }
 
@@ -167,111 +200,133 @@ YP   YP Y8888D'    YP    Y88888P VP   V8P    YP    ~Y8888P' 88   YD Y88888P";
                 {
                     Console.WriteLine("Failed to load!");
                     Console.ReadKey();
+                    stopMelody = true;
                     return;
                 }
                 if (!int.TryParse(parts[0], out sizeX) || !int.TryParse(parts[1], out sizeY))
                 {
                     Console.WriteLine("Failed to load!");
                     Console.ReadKey();
+                    stopMelody = true;
                     return;
                 }
                 loader.ReadLine();
 
                 myWorld = new World(new Plot[sizeX, sizeY]);
 
-                temp = loader.ReadLine();
-                sizeX = int.Parse(loader.ReadLine());
-                sizeY = int.Parse(loader.ReadLine());
-                switch (loader.ReadLine())
+                string myName = loader.ReadLine();
+                string myClass = loader.ReadLine();
+
+                if (myClass != "Warrior" && myClass != "Magician" && myClass != "Rogue")
+                {
+                    Console.WriteLine("Failed to load!");
+                    Console.ReadKey();
+                    stopMelody = true;
+                    return;
+                }
+
+                int myLevel, myExp, myLocationX, myLocationY, myBaseAtk, myBaseDef, myBaseDex, myBaseInt, myMaxHP, myCurrentHP, myMaxMP;
+                double myCurrentMP;
+
+                if (!int.TryParse(loader.ReadLine(), out myLevel))
+                {
+                    Console.WriteLine("Failed to load!");
+                    Console.ReadKey();
+                    stopMelody = true;
+                    return;
+                }
+                if (!int.TryParse(loader.ReadLine(), out myExp))
+                {
+                    Console.WriteLine("Failed to load!");
+                    Console.ReadKey();
+                    stopMelody = true;
+                    return;
+                }
+                if (!int.TryParse(loader.ReadLine(), out myLocationX))
+                {
+                    Console.WriteLine("Failed to load!");
+                    Console.ReadKey();
+                    stopMelody = true;
+                    return;
+                }
+                if (!int.TryParse(loader.ReadLine(), out myLocationY))
+                {
+                    Console.WriteLine("Failed to load!");
+                    Console.ReadKey();
+                    stopMelody = true;
+                    return;
+                }
+                if (!int.TryParse(loader.ReadLine(), out myBaseAtk))
+                {
+                    Console.WriteLine("Failed to load!");
+                    Console.ReadKey();
+                    stopMelody = true;
+                    return;
+                }
+                if (!int.TryParse(loader.ReadLine(), out myBaseDef))
+                {
+                    Console.WriteLine("Failed to load!");
+                    Console.ReadKey();
+                    stopMelody = true;
+                    return;
+                }
+                if (!int.TryParse(loader.ReadLine(), out myBaseDex))
+                {
+                    Console.WriteLine("Failed to load!");
+                    Console.ReadKey();
+                    stopMelody = true;
+                    return;
+                }
+                if (!int.TryParse(loader.ReadLine(), out myBaseInt))
+                {
+                    Console.WriteLine("Failed to load!");
+                    Console.ReadKey();
+                    stopMelody = true;
+                    return;
+                }
+                if (!int.TryParse(loader.ReadLine(), out myMaxHP))
+                {
+                    Console.WriteLine("Failed to load!");
+                    Console.ReadKey();
+                    stopMelody = true;
+                    return;
+                }
+                if (!int.TryParse(loader.ReadLine(), out myCurrentHP))
+                {
+                    Console.WriteLine("Failed to load!");
+                    Console.ReadKey();
+                    stopMelody = true;
+                    return;
+                }
+                if (!int.TryParse(loader.ReadLine(), out myMaxMP))
+                {
+                    Console.WriteLine("Failed to load!");
+                    Console.ReadKey();
+                    stopMelody = true;
+                    return;
+                }
+                if (!double.TryParse(loader.ReadLine(), out myCurrentMP))
+                {
+                    Console.WriteLine("Failed to load!");
+                    Console.ReadKey();
+                    stopMelody = true;
+                    return;
+                }
+
+                switch (myClass)
                 {
                     case "Warrior":
-                        myPlayer = new Player(temp, myWorld, Classes.Warrior, sizeX, sizeY);
+                        myPlayer = new Player(myName, myWorld, Classes.Warrior, myLevel, myExp, myLocationX, myLocationY, myMaxHP, myCurrentHP, myMaxMP, myCurrentMP);
                         break;
 
                     case "Magician":
-                        myPlayer = new Player(temp, myWorld, Classes.Magician, sizeX, sizeY);
+                        myPlayer = new Player(myName, myWorld, Classes.Magician, myLevel, myExp, myLocationX, myLocationY, myMaxHP, myCurrentHP, myMaxMP, myCurrentMP);
                         break;
-                    case "Rouge":
-                        myPlayer = new Player(temp, myWorld, Classes.Rouge, sizeX, sizeY);
+                    case "Rogue":
+                        myPlayer = new Player(myName, myWorld, Classes.Rogue, myLevel, myExp, myLocationX, myLocationY, myMaxHP, myCurrentHP, myMaxMP, myCurrentMP);
                         break;
-                    default:
-                        Console.WriteLine("Failed to load!");
-                        Console.ReadKey();
-                        return;
                 }
 
-                if (!int.TryParse(loader.ReadLine(), out myPlayer.Level))
-                {
-                    Console.WriteLine("Failed to load!");
-                    Console.ReadKey();
-                    return;
-                }
-                if (!int.TryParse(loader.ReadLine(), out myPlayer.Exp))
-                {
-                    Console.WriteLine("Failed to load!");
-                    Console.ReadKey();
-                    return;
-                }
-                if (!int.TryParse(loader.ReadLine(), out myPlayer.LocationX))
-                {
-                    Console.WriteLine("Failed to load!");
-                    Console.ReadKey();
-                    return;
-                }
-                if (!int.TryParse(loader.ReadLine(), out myPlayer.LocationY))
-                {
-                    Console.WriteLine("Failed to load!");
-                    Console.ReadKey();
-                    return;
-                }
-                if (!int.TryParse(loader.ReadLine(), out myPlayer.BaseAtk))
-                {
-                    Console.WriteLine("Failed to load!");
-                    Console.ReadKey();
-                    return;
-                }
-                if (!int.TryParse(loader.ReadLine(), out myPlayer.BaseDef))
-                {
-                    Console.WriteLine("Failed to load!");
-                    Console.ReadKey();
-                    return;
-                }
-                if (!int.TryParse(loader.ReadLine(), out myPlayer.BaseDex))
-                {
-                    Console.WriteLine("Failed to load!");
-                    Console.ReadKey();
-                    return;
-                }
-                if (!int.TryParse(loader.ReadLine(), out myPlayer.BaseInt))
-                {
-                    Console.WriteLine("Failed to load!");
-                    Console.ReadKey();
-                    return;
-                }
-                if (!int.TryParse(loader.ReadLine(), out myPlayer.MaxHP))
-                {
-                    Console.WriteLine("Failed to load!");
-                    Console.ReadKey();
-                    return;
-                }
-                if (!int.TryParse(loader.ReadLine(), out myPlayer.CurrentHP))
-                {
-                    Console.WriteLine("Failed to load!");
-                    Console.ReadKey();
-                    return;
-                }
-                if (!int.TryParse(loader.ReadLine(), out myPlayer.MaxMP))
-                {
-                    Console.WriteLine("Failed to load!");
-                    Console.ReadKey();
-                    return;
-                }
-                if (!int.TryParse(loader.ReadLine(), out myPlayer.CurrentMP))
-                {
-                    Console.WriteLine("Failed to load!");
-                    Console.ReadKey();
-                    return;
-                }
                 loader.ReadLine();
 
                 int itemID, itemCount;
@@ -285,12 +340,14 @@ YP   YP Y8888D'    YP    Y88888P VP   V8P    YP    ~Y8888P' 88   YD Y88888P";
                     {
                         Console.WriteLine("Failed to load!");
                         Console.ReadKey();
+                        stopMelody = true;
                         return;
                     }
                     if (!int.TryParse(parts[0], out itemID) || !int.TryParse(parts[1], out itemCount))
                     {
                         Console.WriteLine("Failed to load!");
                         Console.ReadKey();
+                        stopMelody = true;
                         return;
                     }
 
@@ -307,6 +364,7 @@ YP   YP Y8888D'    YP    Y88888P VP   V8P    YP    ~Y8888P' 88   YD Y88888P";
                     {
                         Console.WriteLine("Failed to load!");
                         Console.ReadKey();
+                        stopMelody = true;
                         return;
                     }
                     myPlayer.MySpellBook.Add(new Spell(itemID));
@@ -348,6 +406,7 @@ YP   YP Y8888D'    YP    Y88888P VP   V8P    YP    ~Y8888P' 88   YD Y88888P";
                         default:
                             Console.WriteLine("Failed to load!");
                             Console.ReadKey();
+                            stopMelody = true;
                             return;
                     }
 
@@ -355,27 +414,32 @@ YP   YP Y8888D'    YP    Y88888P VP   V8P    YP    ~Y8888P' 88   YD Y88888P";
                     for (int i = 0; i < parts2.Length; i++)
                     {
                         parts3 = parts2[i].Split('-');
-                        switch (parts3[2])
-                        {
-                            case "Peaceful":
-                                animalTemp.Add(new Animal(int.Parse(parts3[0]), myWorld, int.Parse(parts1[0]), int.Parse(parts1[1]), int.Parse(parts3[1]), Status.Peaceful));
-                                break;
-                            case "Hostile":
-                                animalTemp.Add(new Animal(int.Parse(parts3[0]), myWorld, int.Parse(parts1[0]), int.Parse(parts1[1]), int.Parse(parts3[1]), Status.Hostile));
-                                break;
-                            case "Dead":
-                                animalTemp.Add(new Animal(int.Parse(parts3[0]), myWorld, int.Parse(parts1[0]), int.Parse(parts1[1]), int.Parse(parts3[1]), Status.Dead));
-                                break;
-                        }
+                        if (parts3[0] != "")
+                            switch (parts3[2])
+                            {
+                                case "Peaceful":
+                                    animalTemp.Add(new Animal(int.Parse(parts3[0]), myWorld, int.Parse(parts1[0]), int.Parse(parts1[1]), int.Parse(parts3[1]), Status.Peaceful));
+                                    break;
+                                case "Hostile":
+                                    animalTemp.Add(new Animal(int.Parse(parts3[0]), myWorld, int.Parse(parts1[0]), int.Parse(parts1[1]), int.Parse(parts3[1]), Status.Hostile));
+                                    break;
+                                case "Dead":
+                                    animalTemp.Add(new Animal(int.Parse(parts3[0]), myWorld, int.Parse(parts1[0]), int.Parse(parts1[1]), int.Parse(parts3[1]), Status.Dead));
+                                    break;
+                            }
                     }
+
+                    temp = loader.ReadLine();
                 }
+
+                AnimalList = animalTemp.ToArray();
 
                 #endregion
             }
 
             else
             {
-                #region saveregion
+                #region startregion
 
                 Console.Write("Enter a world seed (-1 for a random seed): ");
                 string myseedstr = Console.ReadLine();
@@ -427,8 +491,16 @@ YP   YP Y8888D'    YP    Y88888P VP   V8P    YP    ~Y8888P' 88   YD Y88888P";
                 myPlayer.PrintInfo();
                 Console.WriteLine();
 
-                Console.WriteLine("World Map:");
-                PrintMap(myPlayer, AnimalList, myWorld);
+                if (myPlayer.MyCave == null)
+                {
+                    Console.WriteLine("World Map:");
+                    PrintMap(myPlayer, AnimalList, myWorld);
+                }
+                else
+                {
+                    Console.WriteLine("Cave Map:");
+                    PrintCaveMap(myPlayer, myPlayer.MyCave);
+                }
                 Console.WriteLine();
 
                 Console.WriteLine("What will you do? ");
@@ -491,7 +563,12 @@ YP   YP Y8888D'    YP    Y88888P VP   V8P    YP    ~Y8888P' 88   YD Y88888P";
                 //input = Console.ReadLine();
                 Console.Clear();
 
+                Console.ForegroundColor = ConsoleColor.Gray;
+                isAct = Action.Start(input, myPlayer);
+                Console.WriteLine();
+
                 if (isAct)
+                {
                     for (int i = 0; i < AnimalList.Length; i++)
                     {
                         if (AnimalList[i].CurrentStatus == Status.Dead)
@@ -503,17 +580,17 @@ YP   YP Y8888D'    YP    Y88888P VP   V8P    YP    ~Y8888P' 88   YD Y88888P";
                         AnimalList[i].Action();
                     }
 
+                    myPlayer.CurrentMP = Math.Min(myPlayer.MaxMP, myPlayer.CurrentMP + myPlayer.BaseInt / 10.0);
+                }
+
                 if (myPlayer.CurrentHP <= 0)
                 {
                     Console.Clear();
                     Console.WriteLine("You Died! Game Over!");
                     Console.ReadKey();
+                    stopMelody = true;
                     return;
                 }
-
-                Console.ForegroundColor = ConsoleColor.Gray;
-                isAct = Action.Start(input, myPlayer);
-                Console.WriteLine();
             }
 
             //Console.ReadKey();
